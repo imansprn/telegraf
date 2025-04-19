@@ -7,7 +7,7 @@ import argparse
 import json
 from services.leetcode_service import LeetCodeService
 from services.deepseek_service import DeepSeekService
-from services.wordpress_service import WordPressService
+from services.ghost_service import GhostService
 from strategies.go_post_strategy import GoPostStrategy
 from config.config import Config
 
@@ -34,7 +34,7 @@ async def generate_blog_post(difficulty='medium', topics=None, companies=None):
         # Initialize services
         leetcode_service = LeetCodeService()
         deepseek_service = DeepSeekService()
-        wordpress_service = WordPressService()
+        ghost_service = GhostService()
 
         # Initialize strategy
         go_strategy = GoPostStrategy()
@@ -72,7 +72,7 @@ async def generate_blog_post(difficulty='medium', topics=None, companies=None):
         # Publish to WordPress
         print("\nPublishing to WordPress...")
         title = f"Interview Problem: {problem_data['title']} - Go Solution"
-        result = await wordpress_service.execute(title, blog_content)
+        result = await ghost_service.execute(title, blog_content)
         
         print(f"\nSuccessfully published post! WordPress post ID: {result.get('id')}")
         return result
