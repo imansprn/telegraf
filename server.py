@@ -7,7 +7,7 @@ import argparse
 import json
 from services.leetcode_service import LeetCodeService
 from services.deepseek_service import DeepSeekService
-from services.ghost_service import GhostService
+from services.blog_service import BlogServiceFactory
 from strategies.go_post_strategy import GoPostStrategy
 from config.config import Config
 
@@ -34,7 +34,7 @@ async def generate_blog_post(difficulty='medium', topics=None, companies=None):
         # Initialize services
         leetcode_service = LeetCodeService()
         deepseek_service = DeepSeekService()
-        ghost_service = GhostService()
+        blog_service = BlogServiceFactory.create()
 
         # Initialize strategy
         go_strategy = GoPostStrategy()
@@ -69,12 +69,12 @@ async def generate_blog_post(difficulty='medium', topics=None, companies=None):
         prompt = go_strategy.build_prompt(problem_data)
         blog_content = await deepseek_service.execute(prompt)
 
-        # Publish to WordPress
-        print("\nPublishing to WordPress...")
+        # Publish to blog platform
+        print(f"\nPublishing to {config.blog_platform}...")
         title = f"Interview Problem: {problem_data['title']} - Go Solution"
-        result = await ghost_service.execute(title, blog_content)
+        result = await blog_service.execute(title, blog_content)
         
-        print(f"\nSuccessfully published post! WordPress post ID: {result.get('id')}")
+        print(f"\nSuccessfully published post! Post ID: {result.get('id')}")
         return result
 
     except Exception as e:
@@ -136,8 +136,14 @@ def trigger():
         }), 500
 
 if __name__ == '__main__':
-    # Schedule the blog generator to run daily at midnight UTC
-    schedule.every().day.at("00:00").do(run_async_task)
+    # Initialize configuration
+    config = Config()
+    config.validate_config()
+    
+    # Schedule the blog generator for each configured time
+    for schedule_time in config.cron_schedules:
+        schedule.every().day.at(schedule_time).do(run_async_task)
+        print(f"Scheduled task for {schedule_time}")
     
     # Start the scheduler in a separate thread
     scheduler_thread = threading.Thread(target=run_scheduled_task)
