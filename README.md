@@ -1,6 +1,6 @@
 # LeetCode Blog Post Generator
 
-[![Tests](https://github.com/imansprn/telegraf/actions/workflows/test.yml/badge.svg)](https://github.com/imansprn/telegraf/actions/workflows/test.yml)
+[![Tests](https://github.com/imansprn/telegraf/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/imansprn/telegraf/actions/workflows/test.yml)
 [![codecov](https://codecov.io/gh/imansprn/telegraf/branch/main/graph/badge.svg)](https://codecov.io/gh/imansprn/telegraf)
 [![Python Version](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
