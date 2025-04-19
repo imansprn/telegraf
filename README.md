@@ -79,6 +79,7 @@ An automated system that fetches random LeetCode problems, generates blog posts 
    WP_USERNAME=your_wordpress_username
    WP_APP_PASS=your_wordpress_application_password
    WP_URL=https://your-wordpress-site.com
+   CRON_SCHEDULE=00:00,12:00,18:00  # Optional: Schedule posts for midnight, noon, and 6 PM UTC
    ```
 
 ## Local Development
@@ -155,8 +156,11 @@ The service can be deployed to any platform that supports Python web application
    - View logs for debugging and monitoring
 
 4. Scheduling
-   - Posts are generated daily at midnight UTC
-   - Schedule can be modified in server.py
+   - Posts are generated at the times specified in CRON_SCHEDULE
+   - If CRON_SCHEDULE is not set, posts will be generated at midnight UTC (00:00)
+   - Multiple times can be specified as a comma-separated list (e.g., "00:00,12:00,18:00")
+   - Times should be in 24-hour format (HH:MM) in UTC
+   - Invalid time formats will raise an error during startup
    - Manual triggers available via API
 
 ## Contributing

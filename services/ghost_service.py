@@ -1,9 +1,8 @@
 import aiohttp
-import base64
-from services.base_service import BaseService
+from services.blog_service import BlogService
 from config.config import Config
 
-class GhostService(BaseService):
+class GhostService(BlogService):
     def __init__(self):
         config = Config()
         self.base_url = config.ghost_url.rstrip('/')

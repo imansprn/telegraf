@@ -8,58 +8,66 @@ class LeetCodeService(BaseService):
         self.graphql_url = "https://leetcode.com/graphql"
         self.headers = {
             "Content-Type": "application/json",
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Accept": "*/*",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            "Accept": "application/json",
             "Accept-Language": "en-US,en;q=0.9",
+            "Origin": "https://leetcode.com",
+            "Referer": "https://leetcode.com/problemset/all/"
         }
 
     async def execute(self, difficulty=None, topics=None, company_tags=None):
         query = """
-        query problemsetQuestionList {
-            problemsetQuestionList: allQuestions {
-                title
-                titleSlug
-                content
-                difficulty
-                acRate
-                topicTags {
-                    name
-                    slug
+        query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $filters: QuestionListFilterInput) {
+            problemsetQuestionList: questionList(
+                categorySlug: $categorySlug
+                limit: $limit
+                skip: $skip
+                filters: $filters
+            ) {
+                total
+                questions {
+                    title
+                    titleSlug
+                    content
+                    difficulty
+                    acRate
+                    topicTags {
+                        name
+                        slug
+                    }
                 }
             }
         }
         """
         
+        variables = {
+            "categorySlug": "",
+            "limit": 50,
+            "skip": 0,
+            "filters": {}
+        }
+
+        if difficulty:
+            variables["filters"]["difficulty"] = difficulty.upper()
+        
+        if topics:
+            variables["filters"]["tags"] = topics
+
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 self.graphql_url,
-                json={"query": query},
+                json={"query": query, "variables": variables},
                 headers=self.headers
             ) as response:
                 if response.status == 200:
-                    data = await response.json()
-                    questions = data.get("data", {}).get("problemsetQuestionList", [])
+                    response_json = await response.json()
+                    problems = response_json.get("data", {}).get("problemsetQuestionList", {}).get("questions", [])
                     
-                    if not questions:
+                    if not problems:
                         raise Exception("No problems found matching the criteria")
                     
-                    # Filter questions based on parameters
-                    filtered_questions = questions
-                    
-                    if difficulty:
-                        filtered_questions = [q for q in filtered_questions 
-                                           if q["difficulty"].lower() == difficulty.lower()]
-                    
-                    if topics:
-                        filtered_questions = [q for q in filtered_questions 
-                                           if any(tag["name"].lower() in [t.lower() for t in topics] 
-                                                for tag in q["topicTags"])]
-                    
-                    if not filtered_questions:
-                        raise Exception("No problems found matching the criteria after filtering")
-                    
                     # Select a random problem from the filtered list
-                    selected_problem = random.choice(filtered_questions)
+                    selected_problem = random.choice(problems)
                     
                     # Add additional interview-specific metadata
                     selected_problem["interview_metadata"] = {
@@ -70,4 +78,5 @@ class LeetCodeService(BaseService):
                     
                     return selected_problem
                 else:
-                    raise Exception(f"Failed to fetch LeetCode problem: {response.status}") 
+                    error_text = await response.text()
+                    raise Exception(f"Failed to fetch LeetCode problem: {response.status}. Error: {error_text}") 

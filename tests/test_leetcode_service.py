@@ -15,14 +15,17 @@ async def test_leetcode_service_execute_success(leetcode_service, mocker):
     mock_response.status = 200
     mock_response.json.return_value = {
         "data": {
-            "problemsetQuestionList": [{
-                "title": "Test Problem",
-                "titleSlug": "test-problem",
-                "content": "Test content",
-                "difficulty": "MEDIUM",
-                "acRate": 45.5,
-                "topicTags": [{"name": "Array", "slug": "array"}]
-            }]
+            "problemsetQuestionList": {
+                "total": 1,
+                "questions": [{
+                    "title": "Test Problem",
+                    "titleSlug": "test-problem",
+                    "content": "Test content",
+                    "difficulty": "MEDIUM",
+                    "acRate": 45.5,
+                    "topicTags": [{"name": "Array", "slug": "array"}]
+                }]
+            }
         }
     }
 
@@ -51,7 +54,10 @@ async def test_leetcode_service_execute_no_problems(leetcode_service, mocker):
     mock_response.status = 200
     mock_response.json.return_value = {
         "data": {
-            "problemsetQuestionList": []
+            "problemsetQuestionList": {
+                "total": 0,
+                "questions": []
+            }
         }
     }
 
