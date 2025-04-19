@@ -1,7 +1,9 @@
 # LeetCode Blog Post Generator
 
-[![Tests](https://github.com/gobliggg/telegraf/actions/workflows/test.yml/badge.svg)](https://github.com/gobliggg/telegraf/actions/workflows/test.yml)
-[![codecov](https://codecov.io/gh/gobliggg/telegraf/branch/main/graph/badge.svg)](https://codecov.io/gh/gobliggg/telegraf)
+[![Tests](https://github.com/imansprn/telegraf/actions/workflows/test.yml/badge.svg)](https://github.com/imansprn/telegraf/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/imansprn/telegraf/branch/main/graph/badge.svg)](https://codecov.io/gh/imansprn/telegraf)
+[![Python Version](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 An automated system that fetches random LeetCode problems, generates blog posts about solving them in Go, and publishes them to WordPress. The service runs continuously and generates posts on a daily schedule.
 
@@ -30,16 +32,22 @@ An automated system that fetches random LeetCode problems, generates blog posts 
 ├── strategies/
 │   ├── base_strategy.py    # Base strategy interface
 │   └── go_post_strategy.py # Go-specific blog post generator
-├── server.py               # Main web server and scheduler
-├── requirements.txt        # Python dependencies
-├── Procfile               # Web server configuration
-├── .env.example           # Environment variables template
-└── README.md              # This file
+├── tests/                  # Test files
+│   ├── test_leetcode_service.py
+│   ├── test_server.py
+│   └── test_wordpress_service.py
+├── server.py              # Main web server and scheduler
+├── requirements.txt       # Python dependencies
+├── Procfile              # Web server configuration
+├── .env.example          # Environment variables template
+├── pytest.ini           # pytest configuration
+├── .codecov.yml         # Codecov configuration
+└── README.md            # This file
 ```
 
 ## Prerequisites
 
-- Python 3.8+
+- Python 3.13+
 - WordPress site with REST API enabled
 - DeepSeek API key
 - WordPress Application Password
@@ -48,8 +56,8 @@ An automated system that fetches random LeetCode problems, generates blog posts 
 
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
-   cd leetcode-blog-generator
+   git clone https://github.com/imansprn/telegraf.git
+   cd telegraf
    ```
 
 2. Create and activate a virtual environment:
@@ -94,13 +102,49 @@ The server will:
 - `GET /health` - Health check endpoint
 - `POST /trigger` - Manually trigger blog post generation
 
+## Testing
+
+The project uses pytest for testing and pytest-cov for coverage reporting.
+
+### Running Tests
+
+1. Install test dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. Run tests with coverage:
+   ```bash
+   pytest
+   ```
+
+This will:
+- Run all tests
+- Generate a coverage report in the terminal
+- Create a detailed HTML coverage report in `htmlcov/`
+
+### Test Structure
+
+- `tests/test_leetcode_service.py`: Tests for LeetCode API integration
+- `tests/test_wordpress_service.py`: Tests for WordPress publishing
+- `tests/test_server.py`: Tests for web server endpoints
+
+### Coverage Reports
+
+View the HTML coverage report:
+```bash
+open htmlcov/index.html  # On macOS
+xdg-open htmlcov/index.html  # On Linux
+start htmlcov/index.html  # On Windows
+```
+
 ## Deployment
 
 The service can be deployed to any platform that supports Python web applications. Key considerations for deployment:
 
 1. Environment Setup
    - Set all required environment variables
-   - Ensure Python 3.8+ is available
+   - Ensure Python 3.13+ is available
    - Install dependencies from requirements.txt
 
 2. Server Configuration
@@ -149,49 +193,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - [LeetCode](https://leetcode.com/) for their GraphQL API
 - [DeepSeek](https://deepseek.com/) for their AI capabilities
-- [WordPress](https://wordpress.org/) for their REST API
-
-## Testing
-
-The project uses pytest for testing and pytest-cov for coverage reporting.
-
-### Running Tests
-
-1. Install test dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. Run tests with coverage:
-   ```bash
-   pytest
-   ```
-
-This will:
-- Run all tests
-- Generate a coverage report in the terminal
-- Create a detailed HTML coverage report in `htmlcov/`
-
-### Test Structure
-
-- `tests/test_leetcode_service.py`: Tests for LeetCode API integration
-- `tests/test_wordpress_service.py`: Tests for WordPress publishing
-- `tests/test_server.py`: Tests for web server endpoints
-
-### Coverage Reports
-
-View the HTML coverage report:
-```bash
-open htmlcov/index.html  # On macOS
-xdg-open htmlcov/index.html  # On Linux
-start htmlcov/index.html  # On Windows
-```
-
-### Writing Tests
-
-When adding new features:
-1. Create test files in the `tests/` directory
-2. Use appropriate fixtures from `conftest.py`
-3. Mock external services using `pytest-mock`
-4. Aim for high test coverage
-5. Test both success and error cases 
+- [WordPress](https://wordpress.org/) for their REST API 
