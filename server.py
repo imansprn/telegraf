@@ -71,7 +71,7 @@ async def generate_blog_post(difficulty='medium', topics=None, companies=None):
 
         # Publish to blog platform
         print(f"\nPublishing to {config.blog_platform}...")
-        title = f"Interview Problem: {problem_data['title']} - Go Solution"
+        title = f"{problem_data['title']} - Go Solution"
         result = await blog_service.execute(title, blog_content)
         
         print(f"\nSuccessfully published post! Post ID: {result.get('id')}")

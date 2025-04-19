@@ -30,6 +30,15 @@ class DeepSeekService(BaseService):
             ) as response:
                 if response.status == 200:
                     data = await response.json()
-                    return data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                    content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                    
+                    # Clean up the response by removing any opening/closing statements
+                    content = content.replace('Here\'s a WordPress-formatted HTML blog post for solving the LeetCode', '')
+                    content = content.replace('\"`html', '')
+                    content = content.replace('\"`', '')
+                    content = content.replace('Interview Problem:', '')
+                    content = content.strip()
+                    
+                    return content
                 else:
                     raise Exception(f"Failed to generate content with DeepSeek: {response.status}") 
