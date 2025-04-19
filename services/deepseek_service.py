@@ -37,6 +37,15 @@ class DeepSeekService(BaseService):
                     content = content.replace('\"`html', '')
                     content = content.replace('\"`', '')
                     content = content.replace('Interview Problem:', '')
+                    
+                    # Remove the opening statement and backticks if they exist
+                    if content.startswith('Here\'s a WordPress-formatted HTML blog post for solving the "'):
+                        content = content[content.find('<h1>'):]
+                    if content.startswith('```html'):
+                        content = content[7:]
+                    if content.endswith('```'):
+                        content = content[:-3]
+                    
                     content = content.strip()
                     
                     return content
