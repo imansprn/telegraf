@@ -13,10 +13,7 @@ An automated system that fetches random LeetCode problems, generates blog posts 
 - Generates detailed blog posts using DeepSeek AI
 - Publishes content to WordPress automatically
 - Runs as a web service with scheduled tasks
-- Implements clean architecture with design patterns:
-  - Factory Pattern for service management
-  - Strategy Pattern for content generation
-  - Singleton Pattern for configuration
+- Implements clean architecture with design patterns
 
 ## Project Structure
 
@@ -161,21 +158,6 @@ The service can be deployed to any platform that supports Python web application
    - Posts are generated daily at midnight UTC
    - Schedule can be modified in server.py
    - Manual triggers available via API
-
-## Design Patterns Used
-
-### Factory Pattern
-- Each service (LeetCode, DeepSeek, WordPress) is created through its own factory method
-- Makes it easy to add new services or modify existing ones
-
-### Strategy Pattern
-- Different blog post generation strategies can be implemented
-- Currently implements `GoPostStrategy` for Go-specific content
-- Easy to add new strategies for other programming languages
-
-### Singleton Pattern
-- Configuration management is handled through a singleton
-- Ensures consistent configuration across the application
 
 ## Contributing
 
