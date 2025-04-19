@@ -66,6 +66,11 @@ class LeetCodeService(BaseService):
                     if not problems:
                         raise Exception("No problems found matching the criteria")
                     
+                    # Validate problem data structure
+                    for problem in problems:
+                        if not all(key in problem for key in ["title", "titleSlug", "content", "difficulty", "acRate", "topicTags"]):
+                            raise Exception("Invalid problem data structure received from LeetCode API")
+                    
                     # Select a random problem from the filtered list
                     selected_problem = random.choice(problems)
                     
@@ -79,4 +84,9 @@ class LeetCodeService(BaseService):
                     return selected_problem
                 else:
                     error_text = await response.text()
-                    raise Exception(f"Failed to fetch LeetCode problem: {response.status}. Error: {error_text}") 
+                    try:
+                        error_json = json.loads(error_text)
+                        error_message = error_json.get("errors", [{}])[0].get("message", "Unknown error")
+                    except json.JSONDecodeError:
+                        error_message = error_text
+                    raise Exception(f"Failed to fetch LeetCode problem: {response.status}. Error: {error_message}") 
