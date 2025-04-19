@@ -1,17 +1,20 @@
 # LeetCode Blog Post Generator
 
-An automated system that fetches random LeetCode problems, generates blog posts about solving them in Go, and publishes them to WordPress.
+[![Tests](https://github.com/gobliggg/telegraf/actions/workflows/test.yml/badge.svg)](https://github.com/gobliggg/telegraf/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/gobliggg/telegraf/branch/main/graph/badge.svg)](https://codecov.io/gh/gobliggg/telegraf)
+
+An automated system that fetches random LeetCode problems, generates blog posts about solving them in Go, and publishes them to WordPress. The service runs continuously and generates posts on a daily schedule.
 
 ## Features
 
 - Fetches random LeetCode problems using GraphQL API
 - Generates detailed blog posts using DeepSeek AI
 - Publishes content to WordPress automatically
+- Runs as a web service with scheduled tasks
 - Implements clean architecture with design patterns:
   - Factory Pattern for service management
   - Strategy Pattern for content generation
   - Singleton Pattern for configuration
-- Automated daily execution via GitHub Actions
 
 ## Project Structure
 
@@ -27,8 +30,9 @@ An automated system that fetches random LeetCode problems, generates blog posts 
 ├── strategies/
 │   ├── base_strategy.py    # Base strategy interface
 │   └── go_post_strategy.py # Go-specific blog post generator
-├── main.py                 # Main entry point
+├── server.py               # Main web server and scheduler
 ├── requirements.txt        # Python dependencies
+├── Procfile               # Web server configuration
 ├── .env.example           # Environment variables template
 └── README.md              # This file
 ```
@@ -72,17 +76,47 @@ An automated system that fetches random LeetCode problems, generates blog posts 
    WP_URL=https://your-wordpress-site.com
    ```
 
-## Usage
+## Local Development
 
-Run the main script:
+Run the server locally:
 ```bash
-python main.py
+python server.py
 ```
 
-The script will:
-1. Fetch a random LeetCode problem
-2. Generate a blog post about solving it in Go
-3. Publish the post to your WordPress site
+The server will:
+1. Start a web server on port 3000
+2. Schedule blog post generation for midnight UTC
+3. Provide API endpoints for monitoring and manual triggers
+
+## API Endpoints
+
+- `GET /` - Check service status and next scheduled run
+- `GET /health` - Health check endpoint
+- `POST /trigger` - Manually trigger blog post generation
+
+## Deployment
+
+The service can be deployed to any platform that supports Python web applications. Key considerations for deployment:
+
+1. Environment Setup
+   - Set all required environment variables
+   - Ensure Python 3.8+ is available
+   - Install dependencies from requirements.txt
+
+2. Server Configuration
+   - The service runs on port 3000 by default
+   - Uses the Procfile for web server configuration
+   - Supports standard web server interfaces
+
+3. Monitoring
+   - Use the /health endpoint for uptime monitoring
+   - Check service status via the root endpoint
+   - View logs for debugging and monitoring
+
+4. Scheduling
+   - Posts are generated daily at midnight UTC
+   - Schedule can be modified in server.py
+   - Manual triggers available via API
 
 ## Design Patterns Used
 
@@ -117,24 +151,47 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [DeepSeek](https://deepseek.com/) for their AI capabilities
 - [WordPress](https://wordpress.org/) for their REST API
 
-## GitHub Actions Setup
+## Testing
 
-The project includes a GitHub Actions workflow that automatically runs the blog generator daily. To set it up:
+The project uses pytest for testing and pytest-cov for coverage reporting.
 
-1. Fork this repository to your GitHub account
-2. Go to your repository's Settings > Secrets and variables > Actions
-3. Add the following secrets:
-   - `DEEPSEEK_API_KEY`: Your DeepSeek API key
-   - `WP_USERNAME`: Your WordPress username
-   - `WP_APP_PASS`: Your WordPress application password
-   - `WP_URL`: Your WordPress site URL
+### Running Tests
 
-The workflow will:
-- Run automatically at 00:00 UTC every day
-- Can be triggered manually from the Actions tab
-- Upload logs as artifacts if the job fails
+1. Install test dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-To manually trigger the workflow:
-1. Go to the Actions tab in your repository
-2. Select "Scheduled Blog Generator" from the workflows list
-3. Click "Run workflow" 
+2. Run tests with coverage:
+   ```bash
+   pytest
+   ```
+
+This will:
+- Run all tests
+- Generate a coverage report in the terminal
+- Create a detailed HTML coverage report in `htmlcov/`
+
+### Test Structure
+
+- `tests/test_leetcode_service.py`: Tests for LeetCode API integration
+- `tests/test_wordpress_service.py`: Tests for WordPress publishing
+- `tests/test_server.py`: Tests for web server endpoints
+
+### Coverage Reports
+
+View the HTML coverage report:
+```bash
+open htmlcov/index.html  # On macOS
+xdg-open htmlcov/index.html  # On Linux
+start htmlcov/index.html  # On Windows
+```
+
+### Writing Tests
+
+When adding new features:
+1. Create test files in the `tests/` directory
+2. Use appropriate fixtures from `conftest.py`
+3. Mock external services using `pytest-mock`
+4. Aim for high test coverage
+5. Test both success and error cases 
