@@ -5,49 +5,71 @@
 [![Python Version](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-An automated system that fetches random LeetCode problems, generates blog posts about solving them in Go, and publishes them to WordPress. The service runs continuously and generates posts on a daily schedule.
+An automated system that fetches random LeetCode problems, generates blog posts about solving them in Go, and publishes them to either WordPress or Ghost. The service runs continuously and generates posts on a configurable schedule.
 
 ## Features
 
 - Fetches random LeetCode problems using GraphQL API
 - Generates detailed blog posts using DeepSeek AI
-- Publishes content to WordPress automatically
-- Runs as a web service with scheduled tasks
+- Flexible publishing platform support (WordPress or Ghost)
+- Runs as a web service with configurable schedules
 - Implements clean architecture with design patterns
+- Comprehensive test coverage (94%)
+- Continuous Integration with GitHub Actions
 
 ## Project Structure
 
 ```
 .
-├── config/
-│   └── config.py           # Configuration management (Singleton)
-├── services/
-│   ├── base_service.py     # Base service interface
-│   ├── leetcode_service.py # LeetCode problem fetcher
-│   ├── deepseek_service.py # AI content generator
-│   └── wordpress_service.py# WordPress publisher
-├── strategies/
-│   ├── base_strategy.py    # Base strategy interface
-│   └── go_post_strategy.py # Go-specific blog post generator
-├── tests/                  # Test files
-│   ├── test_leetcode_service.py
-│   ├── test_server.py
-│   └── test_wordpress_service.py
-├── server.py              # Main web server and scheduler
-├── requirements.txt       # Python dependencies
-├── Procfile              # Web server configuration
-├── .env.example          # Environment variables template
-├── pytest.ini           # pytest configuration
-├── .codecov.yml         # Codecov configuration
-└── README.md            # This file
+├── config/                    # Configuration management
+│   ├── __init__.py
+│   └── config.py             # Singleton configuration manager
+│
+├── services/                  # Core service implementations
+│   ├── __init__.py
+│   ├── base_service.py       # Abstract base service interface
+│   ├── blog_service.py       # Blog platform factory and strategy
+│   ├── leetcode_service.py   # LeetCode problem fetcher
+│   ├── deepseek_service.py   # AI content generator
+│   ├── ghost_service.py      # Ghost publishing service
+│   └── wordpress_service.py  # WordPress publishing service
+│
+├── strategies/                # Content generation strategies
+│   ├── __init__.py
+│   ├── base_strategy.py      # Abstract base strategy interface
+│   └── go_post_strategy.py   # Go-specific blog post generator
+│
+├── tests/                    # Test suite
+│   ├── __init__.py
+│   ├── conftest.py          # Test configuration and fixtures
+│   ├── test_blog_service.py # Blog service tests
+│   ├── test_deepseek_service.py # AI service tests
+│   ├── test_ghost_service.py # Ghost service tests
+│   ├── test_leetcode_service.py # LeetCode service tests
+│   ├── test_server.py       # Server endpoint tests
+│   └── test_wordpress_service.py # WordPress service tests
+│
+├── .github/                  # GitHub configuration
+│   └── workflows/
+│       └── test.yml         # CI/CD workflow configuration
+│
+├── server.py                # Main application server
+├── requirements.txt         # Python dependencies
+├── Procfile                # Process configuration
+├── .env.example            # Environment variables template
+├── pytest.ini             # Test configuration
+├── .codecov.yml           # Coverage configuration
+└── README.md              # Project documentation
 ```
 
 ## Prerequisites
 
 - Python 3.13+
-- WordPress site with REST API enabled
+- Either WordPress or Ghost site with REST API enabled
 - DeepSeek API key
-- WordPress Application Password
+- Platform-specific credentials:
+  - For WordPress: Username and Application Password
+  - For Ghost: Admin API Key
 
 ## Installation
 
@@ -75,10 +97,17 @@ An automated system that fetches random LeetCode problems, generates blog posts 
 
 5. Edit `.env` with your actual credentials:
    ```
-   DEEPSEEK_API_KEY=your_deepseek_api_key_here
+   DEEPSEEK_API_KEY=your_deepseek_api_key
+   
+   # WordPress Configuration (if using WordPress)
    WP_USERNAME=your_wordpress_username
    WP_APP_PASS=your_wordpress_application_password
    WP_URL=https://your-wordpress-site.com
+   
+   # Ghost Configuration (if using Ghost)
+   GHOST_URL=https://your-ghost-site.com
+   GHOST_ADMIN_API_KEY=your_ghost_admin_api_key
+   
    CRON_SCHEDULE=00:00,12:00,18:00  # Optional: Schedule posts for midnight, noon, and 6 PM UTC
    ```
 
@@ -91,7 +120,7 @@ python server.py
 
 The server will:
 1. Start a web server on port 3000
-2. Schedule blog post generation for midnight UTC
+2. Schedule blog post generation based on CRON_SCHEDULE
 3. Provide API endpoints for monitoring and manual triggers
 
 ## API Endpoints
@@ -123,8 +152,9 @@ This will:
 
 ### Test Structure
 
+- `tests/test_blog_service.py`: Tests for blog platform factory
+- `tests/test_deepseek_service.py`: Tests for AI content generation
 - `tests/test_leetcode_service.py`: Tests for LeetCode API integration
-- `tests/test_wordpress_service.py`: Tests for WordPress publishing
 - `tests/test_server.py`: Tests for web server endpoints
 
 ### Coverage Reports
@@ -135,6 +165,15 @@ open htmlcov/index.html  # On macOS
 xdg-open htmlcov/index.html  # On Linux
 start htmlcov/index.html  # On Windows
 ```
+
+## Continuous Integration
+
+The project uses GitHub Actions for continuous integration:
+
+- Runs on every push and pull request
+- Executes all tests with coverage reporting
+- Uploads coverage reports to Codecov
+- Validates code quality and test coverage
 
 ## Deployment
 

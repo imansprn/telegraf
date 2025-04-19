@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock
 from services.wordpress_service import WordPressService
 from config.config import Config
 
@@ -17,14 +17,14 @@ def wordpress_service(mock_config):
 
 @pytest.mark.asyncio
 async def test_successful_post_creation(wordpress_service):
-    mock_response = MagicMock()
+    mock_response = AsyncMock()
     mock_response.status = 201
-    mock_response.json.return_value = {
+    mock_response.json = AsyncMock(return_value={
         "id": 123,
         "title": "Test Post",
         "content": "Test Content",
         "status": "draft"
-    }
+    })
 
     with patch('aiohttp.ClientSession.post') as mock_post:
         mock_post.return_value.__aenter__.return_value = mock_response
@@ -42,11 +42,11 @@ async def test_successful_post_creation(wordpress_service):
 
 @pytest.mark.asyncio
 async def test_failed_post_creation(wordpress_service):
-    mock_response = MagicMock()
+    mock_response = AsyncMock()
     mock_response.status = 400
-    mock_response.json.return_value = {
+    mock_response.json = AsyncMock(return_value={
         "message": "Invalid post data"
-    }
+    })
 
     with patch('aiohttp.ClientSession.post') as mock_post:
         mock_post.return_value.__aenter__.return_value = mock_response
