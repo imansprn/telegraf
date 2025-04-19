@@ -36,11 +36,6 @@ class LeetCodeService(BaseService):
                 json={"query": query},
                 headers=self.headers
             ) as response:
-                # Log the response details
-                print(f"Response status: {response.status}")
-                response_text = await response.text()
-                print(f"Response body: {response_text}")
-                
                 if response.status == 200:
                     data = await response.json()
                     questions = data.get("data", {}).get("problemsetQuestionList", [])

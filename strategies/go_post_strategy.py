@@ -7,7 +7,7 @@ class GoPostStrategy(BaseStrategy):
         difficulty = problem_data.get('difficulty', '')
         tags = [tag['name'] for tag in problem_data.get('topicTags', [])]
 
-        prompt = f"""Create a detailed blog post about solving the LeetCode problem "{title}" using Go programming language. Format the content for WordPress with proper HTML tags and structure.
+        prompt = f"""Create a detailed blog post about solving the LeetCode problem "{title}" using Go programming language. Format the content in HTML for WordPress.
 
 Problem Details:
 - Title: {title}
@@ -16,6 +16,50 @@ Problem Details:
 
 Problem Description:
 {content}
+
+Please write a WordPress-formatted blog post using HTML tags. Here's the required structure:
+
+1. Title and Meta (h1)
+   <h1>Solving the LeetCode "{title}" Problem in Go</h1>
+   <p class="meta">Difficulty: {difficulty} | Tags: {', '.join(tags)}</p>
+
+2. Introduction (h2)
+   <h2>Introduction</h2>
+   <p>Brief problem overview and importance.</p>
+
+3. Problem Analysis (h2)
+   <h2>Problem Analysis</h2>
+   <p>Detailed explanation with examples.</p>
+
+4. Solution Approach (h2)
+   <h2>Solution Approach</h2>
+   <p>Step-by-step explanation with visual aids if needed.</p>
+
+5. Go Implementation (h2)
+   <h2>Go Implementation</h2>
+   <pre><code class="language-go">
+   // Your Go code here
+   </code></pre>
+
+6. Complexity Analysis (h2)
+   <h2>Complexity Analysis</h2>
+   <p>Time and space complexity explanations.</p>
+
+7. Testing and Examples (h2)
+   <h2>Testing and Examples</h2>
+   <p>Test cases and edge cases.</p>
+
+Important formatting rules:
+- Use HTML tags for all formatting (no markdown)
+- Wrap code in <pre><code class="language-go"> tags
+- Use <h1> for title, <h2> for sections
+- Use <p> for paragraphs
+- Use <ul> and <li> for lists
+- Use <strong> for bold text
+- Use <em> for italic text
+- Use <blockquote> for quotes
+
+Do not use any markdown syntax. Use only HTML tags for formatting.
 
 Please write a WordPress-formatted blog post that includes:
 
