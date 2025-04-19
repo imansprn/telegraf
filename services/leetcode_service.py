@@ -24,8 +24,8 @@ class LeetCodeService(BaseService):
                 skip: $skip
                 filters: $filters
             ) {
-                total
-                questions {
+                totalNum
+                data {
                     title
                     titleSlug
                     content
@@ -61,7 +61,7 @@ class LeetCodeService(BaseService):
             ) as response:
                 if response.status == 200:
                     response_json = await response.json()
-                    problems = response_json.get("data", {}).get("problemsetQuestionList", {}).get("questions", [])
+                    problems = response_json.get("data", {}).get("problemsetQuestionList", {}).get("data", [])
                     
                     if not problems:
                         raise Exception("No problems found matching the criteria")
