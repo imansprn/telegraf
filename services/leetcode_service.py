@@ -1,5 +1,6 @@
 import aiohttp
 import random
+import json
 from services.base_service import BaseService
 
 class LeetCodeService(BaseService):
@@ -7,88 +8,69 @@ class LeetCodeService(BaseService):
         self.graphql_url = "https://leetcode.com/graphql"
         self.headers = {
             "Content-Type": "application/json",
-            "User-Agent": "Mozilla/5.0"
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "*/*",
+            "Accept-Language": "en-US,en;q=0.9",
         }
 
     async def execute(self, difficulty=None, topics=None, company_tags=None):
         query = """
-        query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $filters: QuestionListFilterInput) {
-            problemsetQuestionList(
-                categorySlug: $categorySlug
-                limit: $limit
-                skip: $skip
-                filters: $filters
-            ) {
-                total
-                questions {
-                    title
-                    titleSlug
-                    content
-                    difficulty
-                    frequency
-                    acRate
-                    topicTags {
-                        name
-                        slug
-                    }
-                    companyTags {
-                        name
-                        slug
-                    }
-                    isPaidOnly
+        query problemsetQuestionList {
+            problemsetQuestionList: allQuestions {
+                title
+                titleSlug
+                content
+                difficulty
+                acRate
+                topicTags {
+                    name
+                    slug
                 }
             }
         }
         """
         
-        # Default filters for interview preparation
-        filters = {
-            "status": "AC",  # Only accepted problems
-            "listId": "wpwgkgt",  # Top Interview Questions list
-            "premiumOnly": False,  # Exclude premium problems
-        }
-
-        # Add difficulty filter if specified
-        if difficulty and difficulty.lower() in ['easy', 'medium', 'hard']:
-            filters["difficulty"] = difficulty.upper()
-
-        # Add topic filters if specified
-        if topics:
-            filters["tags"] = topics
-
-        # Add company tags if specified
-        if company_tags:
-            filters["companyTags"] = company_tags
-
-        variables = {
-            "categorySlug": "",
-            "limit": 50,  # Fetch 50 problems to choose from
-            "skip": 0,
-            "filters": filters
-        }
-
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 self.graphql_url,
-                json={"query": query, "variables": variables},
+                json={"query": query},
                 headers=self.headers
             ) as response:
+                # Log the response details
+                print(f"Response status: {response.status}")
+                response_text = await response.text()
+                print(f"Response body: {response_text}")
+                
                 if response.status == 200:
                     data = await response.json()
-                    questions = data.get("data", {}).get("problemsetQuestionList", {}).get("questions", [])
+                    questions = data.get("data", {}).get("problemsetQuestionList", [])
                     
                     if not questions:
                         raise Exception("No problems found matching the criteria")
                     
+                    # Filter questions based on parameters
+                    filtered_questions = questions
+                    
+                    if difficulty:
+                        filtered_questions = [q for q in filtered_questions 
+                                           if q["difficulty"].lower() == difficulty.lower()]
+                    
+                    if topics:
+                        filtered_questions = [q for q in filtered_questions 
+                                           if any(tag["name"].lower() in [t.lower() for t in topics] 
+                                                for tag in q["topicTags"])]
+                    
+                    if not filtered_questions:
+                        raise Exception("No problems found matching the criteria after filtering")
+                    
                     # Select a random problem from the filtered list
-                    selected_problem = random.choice(questions)
+                    selected_problem = random.choice(filtered_questions)
                     
                     # Add additional interview-specific metadata
                     selected_problem["interview_metadata"] = {
-                        "frequency": selected_problem.get("frequency", 0),
                         "acceptance_rate": selected_problem.get("acRate", 0),
-                        "companies": [tag["name"] for tag in selected_problem.get("companyTags", [])],
-                        "topics": [tag["name"] for tag in selected_problem.get("topicTags", [])]
+                        "topics": [tag["name"] for tag in selected_problem.get("topicTags", [])],
+                        "companies": []  # Public API doesn't provide company tags
                     }
                     
                     return selected_problem

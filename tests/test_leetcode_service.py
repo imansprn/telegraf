@@ -12,19 +12,14 @@ async def test_leetcode_service_execute_success(leetcode_service, mocker):
     mock_response.status = 200
     mock_response.json.return_value = {
         "data": {
-            "problemsetQuestionList": {
-                "questions": [{
-                    "title": "Test Problem",
-                    "titleSlug": "test-problem",
-                    "content": "Test content",
-                    "difficulty": "MEDIUM",
-                    "frequency": 0.5,
-                    "acRate": 45.5,
-                    "topicTags": [{"name": "Array", "slug": "array"}],
-                    "companyTags": [{"name": "Google", "slug": "google"}],
-                    "isPaidOnly": False
-                }]
-            }
+            "problemsetQuestionList": [{
+                "title": "Test Problem",
+                "titleSlug": "test-problem",
+                "content": "Test content",
+                "difficulty": "MEDIUM",
+                "acRate": 45.5,
+                "topicTags": [{"name": "Array", "slug": "array"}]
+            }]
         }
     }
 
@@ -37,16 +32,14 @@ async def test_leetcode_service_execute_success(leetcode_service, mocker):
     # Test execution
     result = await leetcode_service.execute(
         difficulty="medium",
-        topics=["array"],
-        company_tags=["google"]
+        topics=["array"]
     )
 
     # Assertions
     assert result["title"] == "Test Problem"
     assert result["difficulty"] == "MEDIUM"
     assert result["interview_metadata"]["acceptance_rate"] == 45.5
-    assert "Array" in result["interview_metadata"]["topics"]
-    assert "Google" in result["interview_metadata"]["companies"]
+    assert result["interview_metadata"]["topics"] == ["Array"]
 
 @pytest.mark.asyncio
 async def test_leetcode_service_execute_no_problems(leetcode_service, mocker):
@@ -55,9 +48,7 @@ async def test_leetcode_service_execute_no_problems(leetcode_service, mocker):
     mock_response.status = 200
     mock_response.json.return_value = {
         "data": {
-            "problemsetQuestionList": {
-                "questions": []
-            }
+            "problemsetQuestionList": []
         }
     }
 
@@ -75,7 +66,8 @@ async def test_leetcode_service_execute_no_problems(leetcode_service, mocker):
 async def test_leetcode_service_execute_api_error(leetcode_service, mocker):
     # Mock error response
     mock_response = mocker.AsyncMock()
-    mock_response.status = 500
+    mock_response.status = 400
+    mock_response.text = mocker.AsyncMock(return_value="Bad Request")
 
     mock_session = mocker.MagicMock()
     mock_session.__aenter__.return_value = mock_session
@@ -84,5 +76,5 @@ async def test_leetcode_service_execute_api_error(leetcode_service, mocker):
     mocker.patch('aiohttp.ClientSession', return_value=mock_session)
 
     # Test execution and assertion
-    with pytest.raises(Exception, match="Failed to fetch LeetCode problem: 500"):
+    with pytest.raises(Exception, match="Failed to fetch LeetCode problem: 400"):
         await leetcode_service.execute() 

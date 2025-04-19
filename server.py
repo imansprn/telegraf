@@ -145,4 +145,4 @@ if __name__ == '__main__':
     scheduler_thread.start()
     
     # Run the Flask app
-    app.run(host='0.0.0.0', port=3000) 
+    app.run(host='0.0.0.0', port=3001) 
