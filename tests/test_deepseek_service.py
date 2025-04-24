@@ -90,4 +90,32 @@ async def test_deepseek_service_execute_empty_response(deepseek_service, mocker)
     result = await deepseek_service.execute("Test prompt")
 
     # Assert empty response handling
-    assert result == "" 
+    assert result == ""
+
+@pytest.mark.asyncio
+async def test_deepseek_service_clean_html_content(deepseek_service, mocker):
+    # Mock response with wrapper text and HTML
+    mock_response = mocker.AsyncMock()
+    mock_response.status = 200
+    mock_response.json.return_value = {
+        "choices": [{
+            "message": {
+                "content": """Here's a blog post about the problem
+```html
+Testing
+```"""
+            }
+        }]
+    }
+
+    mock_session = mocker.MagicMock()
+    mock_session.__aenter__.return_value = mock_session
+    mock_session.__aexit__.return_value = None
+    mock_session.post.return_value.__aenter__.return_value = mock_response
+    mocker.patch('aiohttp.ClientSession', return_value=mock_session)
+
+    # Test execution
+    result = await deepseek_service.execute("Test prompt")
+
+    # Assertions
+    assert result == "Testing" 

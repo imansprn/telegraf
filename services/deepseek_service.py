@@ -32,19 +32,6 @@ class DeepSeekService(BaseService):
                     data = await response.json()
                     content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
                     
-                    # Find the start of HTML content
-                    html_start = content.find('<')
-                    if html_start != -1:
-                        content = content[html_start:]
-                    
-                    # Remove any closing backticks or wrapper text
-                    if content.endswith('```'):
-                        content = content[:-3]
-                    
-                    # Remove any opening backticks with html
-                    if content.startswith('```html'):
-                        content = content[7:]
-                    
                     # Remove any wrapper text before HTML
                     wrapper_texts = [
                         'Here\'s a WordPress-formatted HTML blog post for solving the LeetCode',
@@ -67,16 +54,6 @@ class DeepSeekService(BaseService):
                         'Here\'s the strategy',
                         'Here\'s the method',
                         'Here\'s the technique',
-                        'Here\'s the algorithm',
-                        'Here\'s the solution',
-                        'Here\'s the implementation',
-                        'Here\'s the code',
-                        'Here\'s the explanation',
-                        'Here\'s the analysis',
-                        'Here\'s the approach',
-                        'Here\'s the strategy',
-                        'Here\'s the method',
-                        'Here\'s the technique',
                         'Here\'s the algorithm'
                     ]
                     
@@ -85,7 +62,15 @@ class DeepSeekService(BaseService):
                             content = content[len(text):]
                             break
                     
+                    # Remove code block markers
+                    if '```html' in content:
+                        content = content.split('```html')[1]
+                    if '```' in content:
+                        content = content.split('```')[0]
+                    
+                    # Remove any remaining whitespace
                     content = content.strip()
+                    
                     return content
                 else:
                     raise Exception(f"Failed to generate content with DeepSeek: {response.status}") 
