@@ -83,13 +83,19 @@ async def generate_blog_post(difficulty='medium', topics=None, companies=None):
 
 def run_scheduled_task():
     """Run the blog generator on a schedule"""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
     while True:
         schedule.run_pending()
         time.sleep(60)  # Check every minute
 
 def run_async_task():
     """Run the async blog generator"""
-    asyncio.run(generate_blog_post())
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(generate_blog_post())
+    loop.close()
 
 @app.route('/')
 def home():
