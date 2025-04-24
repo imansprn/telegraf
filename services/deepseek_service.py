@@ -32,22 +32,60 @@ class DeepSeekService(BaseService):
                     data = await response.json()
                     content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
                     
-                    # Clean up the response by removing any opening/closing statements
-                    content = content.replace('Here\'s a WordPress-formatted HTML blog post for solving the LeetCode', '')
-                    content = content.replace('\"`html', '')
-                    content = content.replace('\"`', '')
-                    content = content.replace('Interview Problem:', '')
+                    # Find the start of HTML content
+                    html_start = content.find('<')
+                    if html_start != -1:
+                        content = content[html_start:]
                     
-                    # Remove the opening statement and backticks if they exist
-                    if content.startswith('Here\'s a WordPress-formatted HTML blog post for solving the "'):
-                        content = content[content.find('<h1>'):]
-                    if content.startswith('```html'):
-                        content = content[7:]
+                    # Remove any closing backticks or wrapper text
                     if content.endswith('```'):
                         content = content[:-3]
                     
-                    content = content.strip()
+                    # Remove any opening backticks with html
+                    if content.startswith('```html'):
+                        content = content[7:]
                     
+                    # Remove any wrapper text before HTML
+                    wrapper_texts = [
+                        'Here\'s a WordPress-formatted HTML blog post for solving the LeetCode',
+                        'Here\'s a WordPress-formatted HTML blog post for solving the "',
+                        'Here\'s a WordPress-formatted HTML blog post about',
+                        'Here\'s a WordPress-formatted HTML blog post',
+                        'Here\'s a blog post about',
+                        'Here\'s a blog post',
+                        'Here\'s the blog post',
+                        'Here\'s the content',
+                        'Here\'s the HTML',
+                        'Here\'s the post',
+                        'Here\'s the article',
+                        'Here\'s the solution',
+                        'Here\'s the implementation',
+                        'Here\'s the code',
+                        'Here\'s the explanation',
+                        'Here\'s the analysis',
+                        'Here\'s the approach',
+                        'Here\'s the strategy',
+                        'Here\'s the method',
+                        'Here\'s the technique',
+                        'Here\'s the algorithm',
+                        'Here\'s the solution',
+                        'Here\'s the implementation',
+                        'Here\'s the code',
+                        'Here\'s the explanation',
+                        'Here\'s the analysis',
+                        'Here\'s the approach',
+                        'Here\'s the strategy',
+                        'Here\'s the method',
+                        'Here\'s the technique',
+                        'Here\'s the algorithm'
+                    ]
+                    
+                    for text in wrapper_texts:
+                        if content.startswith(text):
+                            content = content[len(text):]
+                            break
+                    
+                    content = content.strip()
                     return content
                 else:
                     raise Exception(f"Failed to generate content with DeepSeek: {response.status}") 
