@@ -13,7 +13,7 @@ class Config:
 
     def _load_config(self):
         load_dotenv()
-        # DeepSeek configuration
+        # DeepSeek configuration (optional)
         self.deepseek_api_key = os.getenv('DEEPSEEK_API_KEY')
         
         # Blog platform selection
@@ -23,6 +23,8 @@ class Config:
         self.wp_username = os.getenv('WP_USERNAME')
         self.wp_app_pass = os.getenv('WP_APP_PASS')
         self.wp_url = os.getenv('WP_URL')
+        self.wp_client_id = os.getenv('WP_CLIENT_ID')
+        self.wp_client_secret = os.getenv('WP_CLIENT_SECRET')
         
         # Ghost configuration
         self.ghost_url = os.getenv('GHOST_URL')
@@ -43,17 +45,25 @@ class Config:
 
     def validate_config(self):
         required_vars = [
-            ('DEEPSEEK_API_KEY', self.deepseek_api_key),
             ('BLOG_PLATFORM', self.blog_platform)
         ]
         
         # Add platform-specific required variables
         if self.blog_platform.lower() == 'wordpress':
-            required_vars.extend([
-                ('WP_USERNAME', self.wp_username),
-                ('WP_APP_PASS', self.wp_app_pass),
-                ('WP_URL', self.wp_url)
-            ])
+            # Check if URL is WordPress.org
+            is_wordpress_org = '.wordpress.com' in (self.wp_url or '')
+            if is_wordpress_org:
+                required_vars.extend([
+                    ('WP_URL', self.wp_url),
+                    ('WP_CLIENT_ID', self.wp_client_id),
+                    ('WP_CLIENT_SECRET', self.wp_client_secret)
+                ])
+            else:
+                required_vars.extend([
+                    ('WP_USERNAME', self.wp_username),
+                    ('WP_APP_PASS', self.wp_app_pass),
+                    ('WP_URL', self.wp_url)
+                ])
         elif self.blog_platform.lower() == 'ghost':
             required_vars.extend([
                 ('GHOST_URL', self.ghost_url),

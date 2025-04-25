@@ -5,6 +5,7 @@ import threading
 import asyncio
 import argparse
 import json
+from datetime import datetime, timezone
 from services.leetcode_service import LeetCodeService
 from services.deepseek_service import DeepSeekService
 from services.blog_service import BlogServiceFactory
@@ -87,22 +88,34 @@ def run_scheduled_task():
     asyncio.set_event_loop(loop)
     
     while True:
-        schedule.run_pending()
-        time.sleep(60)  # Check every minute
+        try:
+            schedule.run_pending()
+            time.sleep(60)  # Check every minute
+        except Exception as e:
+            print(f"Error in scheduler: {str(e)}")
+            time.sleep(60)  # Wait a minute before retrying
 
 def run_async_task():
     """Run the async blog generator"""
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(generate_blog_post())
-    loop.close()
+    try:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(generate_blog_post())
+    except Exception as e:
+        print(f"Error in async task: {str(e)}")
+    finally:
+        loop.close()
 
 @app.route('/')
 def home():
+    next_run = schedule.next_run()
+    if next_run:
+        next_run = next_run.astimezone(timezone.utc).isoformat()
     return jsonify({
         "status": "running",
         "message": "Blog generator service is running",
-        "next_run": schedule.next_run().isoformat() if schedule.next_run() else "No scheduled runs"
+        "next_run": next_run or "No scheduled runs",
+        "current_time": datetime.now(timezone.utc).isoformat()
     })
 
 @app.route('/health')
@@ -149,7 +162,7 @@ if __name__ == '__main__':
     # Schedule the blog generator for each configured time
     for schedule_time in config.cron_schedules:
         schedule.every().day.at(schedule_time).do(run_async_task)
-        print(f"Scheduled task for {schedule_time}")
+        print(f"Scheduled task for {schedule_time} UTC")
     
     # Start the scheduler in a separate thread
     scheduler_thread = threading.Thread(target=run_scheduled_task)
