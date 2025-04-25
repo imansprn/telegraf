@@ -1,7 +1,4 @@
 from flask import Flask, jsonify
-import schedule
-import time
-import threading
 import asyncio
 import argparse
 import json
@@ -11,6 +8,7 @@ from services.deepseek_service import DeepSeekService
 from services.blog_service import BlogServiceFactory
 from strategies.go_post_strategy import GoPostStrategy
 from config.config import Config
+import threading
 
 app = Flask(__name__)
 
@@ -82,19 +80,6 @@ async def generate_blog_post(difficulty='medium', topics=None, companies=None):
         print(f"An error occurred: {str(e)}")
         raise
 
-def run_scheduled_task():
-    """Run the blog generator on a schedule"""
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    
-    while True:
-        try:
-            schedule.run_pending()
-            time.sleep(60)  # Check every minute
-        except Exception as e:
-            print(f"Error in scheduler: {str(e)}")
-            time.sleep(60)  # Wait a minute before retrying
-
 def run_async_task():
     """Run the async blog generator"""
     try:
@@ -106,68 +91,41 @@ def run_async_task():
     finally:
         loop.close()
 
+next_run = None
+
 @app.route('/')
 def home():
-    next_run = schedule.next_run()
-    if next_run:
-        next_run = next_run.astimezone(timezone.utc).isoformat()
+    """Health check endpoint."""
     return jsonify({
-        "status": "running",
-        "message": "Blog generator service is running",
-        "next_run": next_run or "No scheduled runs",
-        "current_time": datetime.now(timezone.utc).isoformat()
+        'status': 'running',
+        'message': 'Blog generator service is running',
+        'current_time': datetime.now(timezone.utc).isoformat(),
+        'next_run': next_run.isoformat() if next_run else None
     })
 
 @app.route('/health')
 def health():
-    return jsonify({"status": "healthy"})
+    """Health check endpoint."""
+    return jsonify({
+        'status': 'healthy'
+    })
 
 @app.route('/trigger', methods=['POST'])
 def trigger():
     """Manually trigger the blog generator"""
     try:
-        # Create an event to track thread completion
-        thread_error = [None]
-        
-        def run_with_error_handling():
-            try:
-                run_async_task()
-            except Exception as e:
-                thread_error[0] = e
-        
-        # Run in a separate thread to avoid blocking
-        thread = threading.Thread(target=run_with_error_handling)
+        thread = threading.Thread(target=run_async_task)
         thread.start()
-        thread.join(timeout=1)  # Wait briefly to catch immediate errors
-        
-        if thread_error[0]:
-            raise thread_error[0]
-            
         return jsonify({
-            "status": "success",
-            "message": "Blog generation started"
+            'status': 'success',
+            'message': 'Blog generation started'
         })
     except Exception as e:
         print(f"Error in trigger endpoint: {str(e)}")
         return jsonify({
-            "status": "error",
-            "message": str(e)
+            'status': 'error',
+            'message': str(e)
         }), 500
 
 if __name__ == '__main__':
-    # Initialize configuration
-    config = Config()
-    config.validate_config()
-    
-    # Schedule the blog generator for each configured time
-    for schedule_time in config.cron_schedules:
-        schedule.every().day.at(schedule_time).do(run_async_task)
-        print(f"Scheduled task for {schedule_time} UTC")
-    
-    # Start the scheduler in a separate thread
-    scheduler_thread = threading.Thread(target=run_scheduled_task)
-    scheduler_thread.daemon = True
-    scheduler_thread.start()
-    
-    # Run the Flask app
-    app.run(host='0.0.0.0', port=3001) 
+    app.run(host='0.0.0.0', port=3001)

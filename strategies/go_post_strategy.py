@@ -17,7 +17,7 @@ Problem Details:
 Problem Description:
 {content}
 
-Return ONLY the HTML content starting with <h1> and ending with the last </p>. Do not include any wrapper text, backticks, or markdown formatting.
+Return ONLY the HTML content starting with <h1> and ending with </h2>. Do not include any wrapper text, backticks, or markdown formatting.
 
 Required HTML structure:
 
@@ -47,15 +47,12 @@ Required HTML structure:
 <h2>Best Practices and Tips</h2>
 <p>Key takeaways and tips.</p>
 
-<p>Featured Image Suggestion: A visual representation of the problem solution.</p>
-
-<p>Meta Description: Brief description of the problem and solution approach.</p>
-
 Remember:
 - Return ONLY the HTML content
-- Start with <h1> and end with </p>
+- Start with <h1> and end with the last </p> in Best Practices section
 - No wrapper text or backticks
 - No markdown formatting
 - No introduction or explanation outside the HTML
+- No meta description or featured image suggestions
 """
         return prompt 

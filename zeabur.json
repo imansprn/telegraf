@@ -1,0 +1,18 @@
+{
+  "services": [
+    {
+      "name": "web",
+      "type": "web",
+      "env": {
+        "PROCESS_TYPE": "web"
+      }
+    },
+    {
+      "name": "scheduler",
+      "type": "worker",
+      "env": {
+        "PROCESS_TYPE": "scheduler"
+      }
+    }
+  ]
+}

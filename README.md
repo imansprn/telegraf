@@ -10,11 +10,15 @@ An automated system that fetches random LeetCode problems, generates blog posts 
 ## Features
 
 - Fetches random LeetCode problems using GraphQL API
-- Generates detailed blog posts using DeepSeek AI
+- Generates detailed blog posts using DeepSeek AI with:
+  - Robust error handling and retries
+  - Smart content cleaning and formatting
+  - HTML and code block processing
+  - Configurable timeouts and retries
 - Flexible publishing platform support (WordPress or Ghost)
 - Runs as a web service with configurable schedules
 - Implements clean architecture with design patterns
-- Comprehensive test coverage (94%)
+- Comprehensive test coverage (98% for core services)
 - Continuous Integration with GitHub Actions
 
 ## Project Structure
@@ -90,25 +94,33 @@ An automated system that fetches random LeetCode problems, generates blog posts 
    pip install -r requirements.txt
    ```
 
-4. Copy the environment template and fill in your credentials:
+4. Set up environment variables:
    ```bash
    cp .env.example .env
+   # Edit .env with your API keys and configuration
    ```
 
-5. Edit `.env` with your actual credentials:
+5. Run tests to verify installation:
+   ```bash
+   pytest -v
    ```
-   DEEPSEEK_API_KEY=your_deepseek_api_key
-   
-   # WordPress Configuration (if using WordPress)
-   WP_USERNAME=your_wordpress_username
-   WP_APP_PASS=your_wordpress_application_password
-   WP_URL=https://your-wordpress-site.com
-   
-   # Ghost Configuration (if using Ghost)
-   GHOST_URL=https://your-ghost-site.com
-   GHOST_ADMIN_API_KEY=your_ghost_admin_api_key
-   
-   CRON_SCHEDULE=00:00,12:00,18:00  # Optional: Schedule posts for midnight, noon, and 6 PM UTC
+
+## Development
+
+1. Install development dependencies:
+   ```bash
+   pip install -r requirements-dev.txt
+   ```
+
+2. Run tests with coverage:
+   ```bash
+   pytest --cov=. --cov-report=html
+   ```
+
+3. Check code style:
+   ```bash
+   black .
+   flake8
    ```
 
 ## Local Development
@@ -202,6 +214,69 @@ The service can be deployed to any platform that supports Python web application
    - Invalid time formats will raise an error during startup
    - Manual triggers available via API
 
+## Configuration
+
+Create a `.env` file in the root directory with the following variables:
+
+```bash
+# DeepSeek API Configuration
+DEEPSEEK_API_KEY=your_deepseek_api_key_here
+
+# Blog Platform Selection (wordpress or ghost)
+BLOG_PLATFORM=ghost
+
+# WordPress Configuration (if using WordPress)
+WP_USERNAME=your_wordpress_username
+WP_APP_PASS=your_wordpress_application_password
+WP_URL=https://your-wordpress-site.com
+
+# Ghost Configuration (if using Ghost)
+GHOST_URL=https://your-ghost-site.com
+GHOST_API_KEY=your_ghost_admin_api_key_here
+
+# Schedule Configuration
+CRON_SCHEDULE=00:00,12:00,18:00  # Run at midnight, noon, and 6 PM UTC
+```
+
+## Usage
+
+1. **As a Web Service**:
+   ```bash
+   # Start the web server
+   gunicorn server:app
+
+   # Start the scheduler (in a separate terminal)
+   python scheduler.py
+   ```
+
+2. **Generate a Single Post**:
+   ```python
+   from services.deepseek_service import DeepSeekService
+   from strategies.go_post_strategy import GoPostStrategy
+   
+   async def generate_post():
+       # Initialize services
+       deepseek = DeepSeekService()
+       strategy = GoPostStrategy()
+       
+       # Create test problem data
+       problem_data = {
+           'title': 'Two Sum',
+           'difficulty': 'Easy',
+           'content': 'Given an array of integers nums...',
+           'topicTags': [{'name': 'Array'}, {'name': 'Hash Table'}]
+       }
+       
+       # Generate content
+       prompt = strategy.build_prompt(problem_data)
+       content = await deepseek.execute(prompt)
+       print(content)
+   
+   # Run the async function
+   import asyncio
+   asyncio.run(generate_post())
+   ```
+
 ## Contributing
 
 1. Fork the repository
@@ -219,3 +294,22 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [LeetCode](https://leetcode.com/) for their GraphQL API
 - [DeepSeek](https://deepseek.com/) for their AI capabilities
 - [WordPress](https://wordpress.org/) for their REST API 
+
+### DeepSeek Service (`services/deepseek_service.py`)
+
+The DeepSeek service is responsible for generating high-quality blog post content using the DeepSeek AI API. Key features include:
+
+- **Robust Error Handling**: Custom exception handling for API errors, rate limits, and network issues
+- **Retry Logic**: Implements exponential backoff for transient failures
+- **Smart Content Processing**: 
+  - Removes common wrapper text and prefixes
+  - Handles both HTML and non-HTML code blocks
+  - Preserves proper formatting and structure
+  - Case-insensitive pattern matching
+- **Configurable Settings**:
+  - Adjustable timeout values
+  - Configurable retry attempts and delays
+  - Customizable content cleaning patterns
+- **High Test Coverage**: 98% test coverage with comprehensive test cases
+
+The service uses an async/await pattern for efficient API communication and implements the BaseService interface for consistency across the application.
