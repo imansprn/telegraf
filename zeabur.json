@@ -11,13 +11,15 @@
     },
     {
       "name": "scheduler",
-      "type": "worker",
+      "type": "service",
       "env": {
         "PROCESS_TYPE": "scheduler"
       },
       "buildCommand": "pip install -r requirements.txt",
       "startCommand": "python scheduler.py",
-      "runAfterDeploy": true
+      "runAfterDeploy": true,
+      "ports": []
     }
   ]
 }
+
