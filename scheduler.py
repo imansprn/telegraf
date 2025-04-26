@@ -2,6 +2,8 @@ import schedule
 import time
 import asyncio
 import logging
+import signal
+import sys
 from datetime import datetime, timezone
 from server import run_async_task
 from config.config import Config
@@ -13,7 +15,15 @@ logging.basicConfig(
 )
 logger = logging.getLogger('telegraf-scheduler')
 
+def signal_handler(signum, frame):
+    logger.info(f"Received signal {signum}. Shutting down gracefully...")
+    sys.exit(0)
+
 def main():
+    # Set up signal handlers
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+
     try:
         # Initialize configuration
         logger.info("Initializing scheduler...")
@@ -30,7 +40,6 @@ def main():
         # Run the scheduler
         while True:
             try:
-                now = datetime.now(timezone.utc)
                 schedule.run_pending()
                 
                 # Log next run time
@@ -39,16 +48,17 @@ def main():
                     next_run = next_runs[0]
                     logger.debug(f"Next run scheduled for {next_run} UTC")
                 
-                time.sleep(60)  # Check every minute
+                # Use a shorter sleep interval to be more responsive to signals
+                for _ in range(60):
+                    time.sleep(1)
                 
             except Exception as e:
                 logger.error(f"Error in scheduler loop: {str(e)}")
-                # Don't raise, just log and continue
                 time.sleep(60)  # Wait before retrying
                 
     except Exception as e:
         logger.critical(f"Fatal error in scheduler: {str(e)}")
-        raise  # Re-raise fatal errors
+        sys.exit(1)  # Exit with error code instead of raising
 
 if __name__ == '__main__':
     main()
