@@ -1,20 +1,5 @@
 {
-  "name": "scheduler",
-  "services": [
-    {
-      "name": "scheduler",
-      "type": "service",
-      "build": {
-        "buildCommand": "pip install -r requirements.txt"
-      },
-      "start": {
-        "command": "python scheduler.py"
-      },
-      "proxies": [],
-      "healthCheck": {
-        "disable": true
-      }
+    "python": {
+        "entry": "scheduler.py"
     }
-  ]
 }
-
