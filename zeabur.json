@@ -1,15 +1,6 @@
 {
   "services": [
     {
-      "name": "web",
-      "type": "web",
-      "env": {
-        "PROCESS_TYPE": "web"
-      },
-      "buildCommand": "pip install -r requirements.txt",
-      "startCommand": "gunicorn server:app -b 0.0.0.0:8080"
-    },
-    {
       "name": "scheduler",
       "type": "service",
       "env": {
@@ -18,7 +9,10 @@
       "buildCommand": "pip install -r requirements.txt",
       "startCommand": "python scheduler.py",
       "runAfterDeploy": true,
-      "ports": []
+      "ports": [],
+      "healthCheck": {
+        "disable": true
+      }
     }
   ]
 }
