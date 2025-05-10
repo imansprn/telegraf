@@ -33,11 +33,11 @@
                     </div>
                     <div class="flex items-center justify-between">
                         <span class="text-neutral-500">Current Time</span>
-                        <span class="text-neutral-900" id="current-time">2025-05-10T04:53:43Z</span>
+                        <span class="text-neutral-900" id="current-time">{{ current_time }}</span>
                     </div>
                     <div class="flex items-center justify-between">
                         <span class="text-neutral-500">Next Scheduled Run</span>
-                        <span class="text-neutral-900" id="next-run">2025-05-10T12:00:00Z</span>
+                        <span class="text-neutral-900" id="next-run">{{ next_run }}</span>
                     </div>
                     <div class="flex items-center justify-between">
                         <span class="text-neutral-500">Message</span>
@@ -48,10 +48,9 @@
         </div>
     </main>
     <footer class="text-center text-neutral-400 text-xs py-6 mt-8">
-        &copy; 2025 LeetCode Blog Generator &middot; <a href="https://github.com/yourrepo" class="underline hover:text-neutral-600">GitHub</a>
+        &copy; 2025 LeetCode Blog Generator &middot; <a href="https://github.com/imansprn/telegraf" class="underline hover:text-neutral-600">GitHub</a>
     </footer>
     <script>
-        // Helper to get the local timezone abbreviation
         function getTimeZoneAbbr(date) {
             try {
                 return date.toLocaleTimeString(undefined, { timeZoneName: 'short' }).split(' ').pop();
@@ -59,27 +58,23 @@
                 return '';
             }
         }
-        // Use moment.js to display UTC ISO strings in local time with ISO-like format and timezone abbreviation
+        function formatLocalMoment(isoString) {
+            if (!isoString) return '';
+            const m = moment.utc(isoString).local();
+            if (!m.isValid()) return '';
+            const localDate = m.toDate();
+            const abbr = getTimeZoneAbbr(localDate);
+            return m.format('YYYY-MM-DD[T]HH:mm:ssZ') + ' (' + abbr + ')';
+        }
         function displayLocalTimes() {
-            let utc;
-
-            function formatLocalMoment(isoString) {
-                if (!isoString) return '';
-                const m = moment.parseZone(isoString);
-                if (!m.isValid()) return '';
-                const localDate = m.local().toDate();
-                const abbr = getTimeZoneAbbr(localDate);
-                return m.local().format('YYYY-MM-DD[T]HH:mm:ssZ') + ' (' + abbr + ')';
-            }
-
             const currentTimeElem = document.getElementById('current-time');
             const nextRunElem = document.getElementById('next-run');
             if (currentTimeElem) {
-                utc = currentTimeElem.textContent;
+                const utc = currentTimeElem.textContent;
                 currentTimeElem.textContent = formatLocalMoment(utc);
             }
             if (nextRunElem) {
-                utc = nextRunElem.textContent;
+                const utc = nextRunElem.textContent;
                 nextRunElem.textContent = formatLocalMoment(utc);
             }
         }

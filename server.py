@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, jsonify, send_from_directory, render_template
 import asyncio
 import argparse
 import json
@@ -98,8 +98,18 @@ def run_async_task():
 scheduler = None
 
 @app.route('/')
-def index():
-    return send_from_directory('public', 'index.html')
+def home():
+    next_run_time = None
+    if scheduler:
+        jobs = scheduler.get_jobs()
+        if jobs:
+            next_run_time = min((job.next_run_time for job in jobs if job.next_run_time), default=None)
+    now_utc = datetime.now(timezone.utc)
+    return render_template(
+        'index.html',
+        current_time=now_utc.isoformat(),
+        next_run=next_run_time.isoformat() if next_run_time else None
+    )
 
 @app.route('/api/status')
 def api_status():

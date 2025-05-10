@@ -45,9 +45,7 @@ def test_health_check(client):
 def test_home_endpoint(client):
     response = client.get('/')
     assert response.status_code == 200
-    assert "status" in response.json
-    assert "message" in response.json
-    assert "next_run" in response.json
+    assert b"LeetCode Blog Generator" in response.data
 
 def test_trigger_endpoint_success(client, mocker):
     mock_thread = mocker.patch('threading.Thread')
