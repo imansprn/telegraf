@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 import asyncio
 import argparse
 import json
@@ -12,6 +12,7 @@ import threading
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import logging
+import os
 
 app = Flask(__name__)
 
@@ -97,19 +98,23 @@ def run_async_task():
 scheduler = None
 
 @app.route('/')
-def home():
-    """Health check endpoint."""
+def index():
+    return send_from_directory('public', 'index.html')
+
+@app.route('/api/status')
+def api_status():
     next_run_time = None
     if scheduler:
         jobs = scheduler.get_jobs()
         if jobs:
-            # Get the soonest next_run_time among all jobs
             next_run_time = min((job.next_run_time for job in jobs if job.next_run_time), default=None)
+    now_utc = datetime.now(timezone.utc)
+    next_run_utc = next_run_time.astimezone(timezone.utc).isoformat() if next_run_time else None
     return jsonify({
         'status': 'running',
         'message': 'Blog generator service is running',
-        'current_time': datetime.now(timezone.utc).isoformat(),
-        'next_run': next_run_time.isoformat() if next_run_time else None
+        'current_time': now_utc.isoformat(),
+        'next_run': next_run_utc,
     })
 
 @app.route('/health')
