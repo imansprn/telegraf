@@ -9,6 +9,9 @@ from services.blog_service import BlogServiceFactory
 from strategies.go_post_strategy import GoPostStrategy
 from config.config import Config
 import threading
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+import logging
 
 app = Flask(__name__)
 
@@ -91,16 +94,22 @@ def run_async_task():
     finally:
         loop.close()
 
-next_run = None
+scheduler = None
 
 @app.route('/')
 def home():
     """Health check endpoint."""
+    next_run_time = None
+    if scheduler:
+        jobs = scheduler.get_jobs()
+        if jobs:
+            # Get the soonest next_run_time among all jobs
+            next_run_time = min((job.next_run_time for job in jobs if job.next_run_time), default=None)
     return jsonify({
         'status': 'running',
         'message': 'Blog generator service is running',
         'current_time': datetime.now(timezone.utc).isoformat(),
-        'next_run': next_run.isoformat() if next_run else None
+        'next_run': next_run_time.isoformat() if next_run_time else None
     })
 
 @app.route('/health')
@@ -127,5 +136,29 @@ def trigger():
             'message': str(e)
         }), 500
 
+def start_scheduler():
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    logger = logging.getLogger('telegraf-scheduler')
+    config = Config()
+    config.validate_config()
+    global scheduler
+    scheduler = BackgroundScheduler(timezone=timezone.utc)
+    for schedule_time in config.cron_schedules:
+        hour, minute = map(int, schedule_time.split(':'))
+        scheduler.add_job(
+            run_async_task,
+            CronTrigger(hour=hour, minute=minute),
+            name=f'blog_generator_{hour:02d}_{minute:02d}',
+            misfire_grace_time=3600
+        )
+        logger.info(f"Scheduled task for {schedule_time} UTC")
+    scheduler.start()
+    logger.info("Scheduler started successfully")
+    return scheduler
+
 if __name__ == '__main__':
+    start_scheduler()
     app.run(host='0.0.0.0', port=3001)
