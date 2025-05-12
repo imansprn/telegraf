@@ -118,17 +118,8 @@ class DeepSeekService(BaseService):
         # Clean up excessive newlines
         lines = [line.strip() for line in content.splitlines() if line.strip()]
         
-        # If we have multiple lines and one of them contains HTML-like content, return that
-        for line in lines:
-            if line.startswith('<') and line.endswith('>'):
-                return line
-        
-        # Otherwise return the first non-empty line that's not a code block marker or HTML
-        for line in lines:
-            if not line.startswith('```') and line != 'html' and not line.startswith('<') and not line.endswith('>'):
-                return line
-        
-        return ""
+        # Join all lines back together to preserve the full HTML content
+        return "\n".join(lines)
 
     async def _make_api_call(self, payload: dict) -> Optional[str]:
         """Make an API call to DeepSeek with retry logic."""
