@@ -3,6 +3,8 @@ import asyncio
 from typing import Optional
 from services.base_service import BaseService
 from config.config import Config
+import re
+import subprocess
 
 class DeepSeekAPIError(Exception):
     """Custom exception for DeepSeek API errors."""
@@ -121,6 +123,33 @@ class DeepSeekService(BaseService):
         # Join all lines back together to preserve the full HTML content
         return "\n".join(lines)
 
+    def _beautify_go_code_in_html(self, html):
+        def simple_indent_go_code(code):
+            indent = 0
+            result = []
+            for line in code.splitlines():
+                stripped = line.strip()
+                if stripped == "":
+                    result.append("")
+                    continue
+                if stripped.startswith("}"):
+                    indent -= 1
+                result.append("    " * indent + stripped)
+                if stripped.endswith("{"):
+                    indent += 1
+            return "\n".join(result)
+
+        def format_code(match):
+            code = match.group(1)
+            formatted_code = simple_indent_go_code(code)
+            return f'<pre><code class="language-go">\n{formatted_code}\n</code></pre>'
+        return re.sub(
+            r'<pre><code class="language-go">\s*(.*?)\s*</code></pre>',
+            lambda m: format_code(m),
+            html,
+            flags=re.DOTALL
+        )
+
     async def _make_api_call(self, payload: dict) -> Optional[str]:
         """Make an API call to DeepSeek with retry logic."""
         for attempt in range(self.max_retries):
@@ -173,4 +202,6 @@ class DeepSeekService(BaseService):
         }
 
         content = await self._make_api_call(payload)
-        return self._clean_content(content)
+        cleaned = self._clean_content(content)
+        beautified = self._beautify_go_code_in_html(cleaned)
+        return beautified

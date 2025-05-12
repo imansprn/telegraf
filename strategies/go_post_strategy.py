@@ -54,5 +54,6 @@ Remember:
 - No markdown formatting
 - No introduction or explanation outside the HTML
 - No meta description or featured image suggestions
+- Format all code with proper indentation and blank lines for readability. Do not minify the code.
 """
         return prompt 
