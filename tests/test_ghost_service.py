@@ -10,7 +10,7 @@ def mock_config(mocker):
     # Create a real Config instance but mock its attributes
     config = Config()
     config.ghost_url = "https://test.com"
-    config.ghost_api_key = "test_api_key"
+    config.ghost_api_key = "test_id:test_secret"
     mocker.patch('config.config.Config', return_value=config)
     return config
 

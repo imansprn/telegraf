@@ -1,4 +1,5 @@
 aiohttp==3.9.3
+pyjwt
 python-dotenv==1.0.1
 flask==3.0.2
 schedule==1.2.1
